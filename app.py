@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+import math
 from flask import Flask, render_template, request, send_file
 import os
 
@@ -46,5 +48,43 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/3plwinner', methods=['GET', 'POST'])
+def second_page():
+    if request.method == 'POST':
+        file1 = request.files['file1']
+        file2 = request.files['file2']
+
+        df_orders = pd.read_csv(file1)
+        df_invoice = pd.read_csv(file2)
+
+        df_orders = df_orders.loc[:, ['ORDER ID', 'ZONE']]
+
+        df_invoice = df_invoice.merge(
+            df_orders[['ORDER ID', 'ZONE']], on='ORDER ID', how='left')
+
+        df_invoice = df_invoice.rename(columns={'ZONE': 'Zone'})
+
+        df_invoice['Zone'] = df_invoice['Zone'].str.replace(
+            r'^[A-Za-z]+', '', regex=True)
+
+        df_invoice['Zone'] = df_invoice['Zone'].fillna(0)
+
+        df_invoice['Package Weight'] = pd.to_numeric(
+            df_invoice['Package Weight'], errors='coerce')
+
+        df_invoice['Package Weight OZ'] = df_invoice['Package Weight'].apply(
+            lambda x: math.ceil(x * 16) if x < 1 else 0)
+
+        df_invoice['Package Weight LB'] = df_invoice['Package Weight'].apply(
+            lambda x: math.ceil(x) if x >= 1 else 0)
+
+        output_path = 'updated_invoice.csv'
+        df_invoice.to_csv(output_path, index=False)
+
+        return send_file(output_path, as_attachment=True)
+
+    return render_template('3plwinner.html')
+
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8080)
