@@ -86,5 +86,29 @@ def second_page():
     return render_template('3plwinner.html')
 
 
+@app.route('/usps-3pl', methods=['GET', 'POST'])
+def third_page():
+    if request.method == 'POST':
+
+        data_path = './static/data'
+
+        file1 = request.files['file1']
+
+        dsx_data = os.path.join(data_path, 'dsx_data.csv')
+
+        usps_report = pd.read_csv(file1, encoding='latin-1')
+        dsx_report = pd.read_csv(dsx_data, encoding='latin-1')
+
+        merged_df = usps_report.merge(dsx_report[[
+                                      'MarketOrderId', 'NegotiatedCost', 'MarkupCost']], on='MarketOrderId', how='left')
+
+        output_path = 'updated_usps_report.csv'
+        merged_df.to_csv(output_path, index=False)
+
+        return send_file(output_path, as_attachment=True)
+
+    return render_template('usps-3pl.html')
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)

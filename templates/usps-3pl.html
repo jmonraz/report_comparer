@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>3PLWINER Reports</title>
+</head>
+
+<body>
+    <header>
+        <ul>
+            <li><a href="{{url_for('index')}}">Logico</a></li>
+            <li><a href="{{url_for('second_page')}}">3PLWINNER</a></li>
+            <li><a href="{{url_for('third_page')}}">USPS 3PL</a></li>
+        </ul>
+        </nav>
+        <h1 style="text-align: center;">3PLWINNER USPS Report</h1>
+    </header>
+    <main>
+        <section class="container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="file-box">
+                    <label for="file1">USPS Report</label> <br>
+                    <input type="file" name="file1" accept=".csv, .xlsx">
+                </div>
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </section>
+    </main>
+</body>
+
+</html>
