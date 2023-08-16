@@ -17,11 +17,11 @@ def index():
         if file1.filename.endswith('.xlsx'):
             df1 = pd.read_excel(file1)
         elif file1.filename.endswith('.csv'):
-            df1 = pd.read_csv(file1)
+            df1 = pd.read_csv(file1, encoding='latin-1')
         if file2.filename.endswith('.xlsx'):
             df2 = pd.read_excel(file2)
         elif file2.filename.endswith('csv'):
-            df2 = pd.read_csv(file2)
+            df2 = pd.read_csv(file2, encoding='latin-1')
 
         df2 = df2.dropna(subset=[df2.columns[0]])
         df2 = df2.reset_index(drop=True)
@@ -54,8 +54,8 @@ def second_page():
         file1 = request.files['file1']
         file2 = request.files['file2']
 
-        df_orders = pd.read_csv(file1)
-        df_invoice = pd.read_csv(file2)
+        df_orders = pd.read_csv(file1, encoding='latin-1')
+        df_invoice = pd.read_csv(file2, encoding='latin-1')
 
         df_orders = df_orders.loc[:, ['ORDER ID', 'ZONE']]
 
