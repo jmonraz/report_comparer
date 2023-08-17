@@ -58,25 +58,20 @@ def second_page():
         file2 = request.files['file2']
 
         dhl_rates = os.path.join(rates_path, 'DHL_prices.csv')
-
-        # dhl_rates1 = os.path.join(rates_path, 'DHL_expedited_max_1lbover.csv')
-        # dhl_rates2 = os.path.join(rates_path, 'DHL_expedited_max_1lbless.csv')
-
         dhl_prices = pd.read_csv(dhl_rates, encoding='utf-8-sig')
-        dhl_prices.info()
-        # dhl_less_lb = pd.read_csv(dhl_rates2, encoding='utf-8-sig')
-        # dhl_over_lb = pd.read_csv(dhl_rates1, encoding='utf-8-sig')
 
         df_orders = pd.read_csv(file1, encoding='utf-8-sig')
+        df_orders = df_orders.rename(
+            columns={'Billing_Ref2': 'Order Id', 'Service Type ': 'Service Type'})
+
         df_orders = df_orders.loc[:, [
             'Order Id', 'Pricing_Zone', 'Service Type']]
 
         df_invoice = pd.read_csv(file2, encoding='utf-8-sig')
+        df_invoice = df_invoice.rename(columns={'ORDER ID': 'Order Id'})
 
         df_invoice = df_invoice.merge(
             df_orders[['Order Id', 'Pricing_Zone', 'Service Type']], on='Order Id', how='left')
-
-        df_invoice.info()
 
         # df_invoice = df_invoice.rename(columns={'Zone': 'Zone'})
 
@@ -89,11 +84,11 @@ def second_page():
         df_invoice['Package Weight'] = pd.to_numeric(
             df_invoice['Package Weight'], errors='coerce')
 
-        df_invoice['Package Weight OZ'] = df_invoice['Package Weight'].apply(
-            lambda x: math.ceil(x * 16) if x < 1 else 0)
+        # df_invoice['Package Weight OZ'] = df_invoice['Package Weight'].apply(
+        #     lambda x: math.ceil(x * 16) if x < 1 else 0)
 
-        df_invoice['Package Weight LB'] = df_invoice['Package Weight'].apply(
-            lambda x: math.ceil(x) if x >= 1 else 0)
+        # df_invoice['Package Weight LB'] = df_invoice['Package Weight'].apply(
+        #     lambda x: math.ceil(x) if x >= 1 else 0)
 
         df_invoice['Package_Weight_Converted'] = df_invoice['Package Weight'].apply(
             lambda x: f"{math.ceil(x*16):.0f}oz" if x < 1 else f"{math.ceil(x)}lb")
@@ -102,20 +97,6 @@ def second_page():
             ['Pricing_Zone', 'Weight', 'Service Type'])['Price'].to_dict()
         print(price_mapping)
 
-        # rates1_mapping = dhl_less_lb.set_index(['Zone', 'Package Weight OZ'])[
-        #     'Price'].to_dict()
-
-        # rates2_mapping = dhl_over_lb.set_index(
-        #     ['Zone', 'LBS'])['Price'].to_dict()
-
-        # def get_package_price_oz(row):
-        #     key = (row['Zone'], row['Package Weight OZ'])
-        #     return rates1_mapping.get(key, 0)
-
-        # def get_package_price_lb(row):
-        #     key = (row['Zone'], row['Package Weight LB'])
-        #     return rates2_mapping.get(key, 0)
-
         def get_package_price(row):
             key = (row['Pricing_Zone'],
                    row['Package_Weight_Converted'], row['Service Type'])
@@ -123,37 +104,6 @@ def second_page():
 
         df_invoice['Total Price'] = df_invoice.apply(
             get_package_price, axis=1)
-
-        # df_invoice['Package Price OZ'] = df_invoice.apply(
-        #     get_package_price_oz, axis=1)
-
-        # df_invoice['Package Price LB'] = df_invoice.apply(
-        #     get_package_price_lb, axis=1)
-
-        # Remove the '$' symbol and then convert currency strings to numeric values
-        # df_invoice['Package Price OZ'] = df_invoice['Package Price OZ'].str.replace(
-        #     '[^\d.]', '', regex=True).astype(float)
-        # df_invoice['Package Price LB'] = df_invoice['Package Price LB'].str.replace(
-        #     '[^\d.]', '', regex=True).astype(float)
-
-        # df_invoice['Package Price LB'] = df_invoice['Package Price LB'].replace(
-        #     '', '0.00')
-        # df_invoice['Package Price OZ'] = df_invoice['Package Price OZ'].replace(
-        #     '', '0.00')
-
-        # Convert columns to numeric
-        # df_invoice['Package Price OZ'] = pd.to_numeric(
-        #     df_invoice['Package Price OZ'])
-        # df_invoice['Package Price LB'] = pd.to_numeric(
-        #     df_invoice['Package Price LB'])
-
-        # df_invoice['Package Price'] = df_invoice['Package Price OZ'] + \
-        #     df_invoice['Package Price LB']
-
-        # df_invoice['Package Price'] = df_invoice['Package Price'].round(2)
-
-        # df_invoice['Package Price'] = df_invoice['Package Price'].apply(
-        #     lambda x: '${:,.2f}'.format(x))
 
         df_invoice['TRACKING NUMBER'] = df_invoice['TRACKING NUMBER'].apply(
             lambda x: f'`{x}')
