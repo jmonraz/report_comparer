@@ -184,11 +184,22 @@ def fourth_page():
         freight_report = pd.read_csv(file1, encoding='utf-8-sig')
         dsx_report = pd.read_csv(dsx_data, encoding='utf-8-sig')
 
+        print("Before merging:", len(freight_report))
+        print('merging')
+
         merged_df = freight_report.merge(dsx_report[[
             'MarketOrderId', 'NegotiatedCost', 'MarkupCost']], on='MarketOrderId', how='left')
 
+        merged_df = merged_df.drop_duplicates(
+            subset=['MarketOrderId', 'MarkupCost'], keep='first')
+
+        print('merge done')
+
         output_path = 'updated_freight_report.csv'
         merged_df.to_csv(output_path, index=False)
+
+        print("After merging:", len(merged_df))
+        print('done')
 
         return send_file(output_path, as_attachment=True)
 
