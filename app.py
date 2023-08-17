@@ -255,6 +255,8 @@ def fifth_page():
 
         new_df.to_csv('updated_dsx_report.csv', index=False)
 
+        return send_file('updated_dsx_report.csv', as_attachment=True)
+
     return render_template('format-dsx-file.html')
 
 
