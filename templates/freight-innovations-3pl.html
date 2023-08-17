@@ -15,22 +15,18 @@
             <li><a href="{{url_for('second_page')}}">3PLWINNER</a></li>
             <li><a href="{{url_for('third_page')}}">USPS 3PL</a></li>
             <li><a href="{{url_for('fourth_page')}}">Freight Innovations 3PL</a></li>
+            <li><a href="{{url_for('fifth_page')}}">Format DSX File</a></li>
         </ul>
         </nav>
-        <h1 style="text-align: center;">3PLWINNER DHL Report</h1>
+        <h1 style="text-align: center;">3PLWINNER Freight Innvation Report</h1>
     </header>
     <main>
         <section class="container">
             <form method="POST" enctype="multipart/form-data">
                 <div class="file-box">
-                    <label for="file1">DHL Orders Report</label> <br>
+                    <label for="file1">Freight Innovations Report</label> <br>
                     <input type="file" name="file1" accept=".csv, .xlsx">
                 </div>
-                <div class="file-box">
-                    <label for="file2">VeraCore Invoice</label> <br>
-                    <input type="file" name="file2" accept=".csv, .xlsx">
-                </div>
-
                 <button type="submit" class="btn">Submit</button>
             </form>
         </section>
