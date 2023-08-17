@@ -197,6 +197,12 @@ def fourth_page():
 
 @app.route('/format-dsx-file', methods=['GET', 'POST'])
 def fifth_page():
+
+    def add_backtick(cell):
+        numbers = [f"`{num.strip()}" if not num.strip().startswith(
+            "`") else num.strip() for num in cell.split(',')]
+        return ','.join(numbers)
+
     if request.method == 'POST':
 
         file1 = request.files['file1']
@@ -204,20 +210,20 @@ def fifth_page():
         dsx_report = pd.read_csv(file1, encoding='utf-8-sig')
 
         dsx_report['TrackingNumber'] = dsx_report['TrackingNumber'].apply(
-            lambda x: f'`{x}')
+            add_backtick)
 
-        # split TrackingNumber, MarkupCost, and NegotiatedCost cells into lists
+        # Split Tracking Number and MarkupCost cells into lists
         dsx_report['TrackingNumber'] = dsx_report['TrackingNumber'].apply(
-            lambda x: x.split(', ') if isinstance(x, str) else [])
+            lambda x: x.split(',') if isinstance(x, str) else [])
         dsx_report['MarkupCost'] = dsx_report['MarkupCost'].apply(
-            lambda x: x.split(', ') if isinstance(x, str) else [])
+            lambda x: x.split(',') if isinstance(x, str) else [])
         dsx_report['NegotiatedCost'] = dsx_report['NegotiatedCost'].apply(
-            lambda x: x.split(', ') if isinstance(x, str) else [])
+            lambda x: x.split(',') if isinstance(x, str) else [])
 
-        # create a list to store new rows
+        # Create a list to store new rows
         new_rows = []
 
-        # iterate through each row in the dataframe
+        # Iterate through each row
         for index, row in dsx_report.iterrows():
             tracking_numbers = row['TrackingNumber']
             markup_costs = row['MarkupCost']
@@ -234,28 +240,29 @@ def fifth_page():
                     for tn in tracking_numbers:
                         new_row = row.copy()
                         new_row['TrackingNumber'] = tn
-                        new_row['MarkupCost'] = ', '.join(non_zero_mc)
-                        new_row['NegotiatedCost'] = ', '.join(non_zero_nc)
+                        new_row['MarkupCost'] = ','.join(non_zero_mc)
+                        new_row['NegotiatedCost'] = ','.join(non_zero_nc)
                         new_rows.append(new_row)
 
-        # function to filter non-zero values and join them back as string
-        def filter_non_zero(value_str):
-            values = value_str.split(', ')
-            non_zero_values = [
-                value for value in values if value.strip() != '0.00']
-            return ', '.join(non_zero_values)
+        # Function to filter non-zero values and join them back as a string
 
-        # create a new dataframe from the list of new rows
+        def filter_non_zero(value_str):
+            values = value_str.split(',')
+            non_zero_values = [v for v in values if v != '0.00']
+            return ','.join(non_zero_values)
+
+        # Create a new DataFrame from the list of new rows
         new_df = pd.DataFrame(new_rows)
 
-        # apply the function to the 'markup cost' column
+        # Apply the function to the 'markup cost' column
         new_df['MarkupCost'] = new_df['MarkupCost'].apply(filter_non_zero)
         new_df['NegotiatedCost'] = new_df['NegotiatedCost'].apply(
             filter_non_zero)
 
-        new_df.to_csv('updated_dsx_report.csv', index=False)
+        output_path = 'updated_dsx_report.csv'
+        new_df.to_csv(output_path, index=False)
 
-        return send_file('updated_dsx_report.csv', as_attachment=True)
+        return send_file(output_path, as_attachment=True)
 
     return render_template('format-dsx-file.html')
 
