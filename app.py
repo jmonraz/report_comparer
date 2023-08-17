@@ -96,7 +96,7 @@ def second_page():
             lambda x: math.ceil(x) if x >= 1 else 0)
 
         df_invoice['Package_Weight_Converted'] = df_invoice['Package Weight'].apply(
-            lambda x: math.ceil(x * 16) if x < 1 else math.ceil(x))
+            lambda x: f"{math.ceil(x*16):.0f}oz" if x < 1 else f"{math.ceil(x)}lb")
 
         price_mapping = dhl_prices.set_index(
             ['Pricing_Zone', 'Weight', 'Service Type'])['Price'].to_dict()
