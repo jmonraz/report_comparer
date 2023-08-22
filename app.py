@@ -151,7 +151,12 @@ def fourth_page():
         dsx_data = os.path.join(data_path, 'dsx_data.csv')
 
         freight_report = pd.read_csv(file1, encoding='utf-8-sig')
+        freight_report = freight_report.rename(
+            columns={'Billing_Ref2': 'MarketOrderId', 'Service Type': 'Service Type'})
         dsx_report = pd.read_csv(dsx_data, encoding='utf-8-sig')
+
+        dsx_report.info()
+        freight_report.info()
 
         print("Before merging:", len(freight_report))
         print('merging')
