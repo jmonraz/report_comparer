@@ -20,24 +20,31 @@
             </div>
         </ul>
         </nav>
-        <h1 style="text-align: center;">3PLWINNER DHL Report</h1>
     </header>
     <main>
         <section class="container">
+            <h1 style="text-align: center;">Luxe DHL Report</h1>
             <form method="POST" enctype="multipart/form-data">
                 <div class="file-box">
-                    <label for="file1">DHL Orders Report</label> <br>
-                    <input type="file" name="file1" accept=".csv, .xlsx">
+                    <label>
+                        DHL Orders
+                        <input type="file" name="file1" accept=".csv, .xlsx" id="fileInput1">
+                    </label>
+                    <span class="file-name"></span>
                 </div>
                 <div class="file-box">
-                    <label for="file2">VeraCore Invoice</label> <br>
-                    <input type="file" name="file2" accept=".csv, .xlsx">
+                    <label>
+                        VeraCore Invoice
+                        <input type="file" name="file2" accept=".csv, .xlsx" id="fileInput2">
+                    </label>
+                    <span class="file-name"></span>
                 </div>
 
                 <button type="submit" class="btn">Submit</button>
             </form>
         </section>
     </main>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 
 </html>

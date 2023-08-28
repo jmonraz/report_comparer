@@ -10,6 +10,9 @@ body {
     font-family: 'Roboto', sans-serif;
     line-height: 1.6;
     background-color: #c5c5c5;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
 h1 {
@@ -35,6 +38,13 @@ ul {
     list-style: none;
 }
 
+main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .active {
     background-color: #333;
     color: #f4f4f4;
@@ -55,6 +65,7 @@ ul {
 
 .container {
     display: flex;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -63,6 +74,8 @@ ul {
 }
 
 .file-box {
+    display: flex;
+    flex-direction: column;
     margin: 15px;
     padding: 15px;
 }
@@ -87,4 +100,30 @@ ul {
     cursor: pointer;
     background-color: rgb(2, 98, 2);
     color: white;
+}
+
+input[type='file'] {
+    display: none;
+}
+
+.file-box label {
+    cursor: pointer;
+    display: inline-block;
+    padding: 10px 15px;
+    border: 2px solid green;
+    border-radius: 10px;
+    background-color: #f4f4f4;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.file-box label:hover {
+    background-color: rgb(2, 98, 2);
+    color: white;
+}
+
+.file-name {
+    margin-top: 5px;
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: bold;
 }
