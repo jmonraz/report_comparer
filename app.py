@@ -48,7 +48,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/3plwinner', methods=['GET', 'POST'])
+@app.route('/luxe-dhl-3pl', methods=['GET', 'POST'])
 def second_page():
     if request.method == 'POST':
 
@@ -129,8 +129,17 @@ def third_page():
         usps_report = pd.read_csv(file1, encoding='latin-1')
         dsx_report = pd.read_csv(dsx_data, encoding='latin-1')
 
+        # rename column names for usps_report 'customMessage1' to 'MarketOrderId'
+        usps_report = usps_report.rename(
+            columns={'customMessage1': 'MarketOrderId'})
+
         merged_df = usps_report.merge(dsx_report[[
-                                      'MarketOrderId', 'NegotiatedCost', 'MarkupCost']], on='MarketOrderId', how='left')
+                                      'MarketOrderId', 'NegotiatedCost', 'MarkupCost', 'CartonWeight']], on='MarketOrderId', how='left')
+
+        merged_df['CartonWeight'] = merged_df['CartonWeight'].fillna(0)
+        merged_df['CartonWeight'] = merged_df['CartonWeight'].astype(float)
+        merged_df['CartonWeight'] = merged_df['CartonWeight'].apply(
+            lambda x: f"{math.ceil(x*16):.0f}oz" if x < 1 else f"{math.ceil(x)}lb")
 
         output_path = 'updated_usps_report.csv'
         merged_df.to_csv(output_path, index=False)
@@ -152,7 +161,7 @@ def fourth_page():
 
         freight_report = pd.read_csv(file1, encoding='utf-8-sig')
         freight_report = freight_report.rename(
-            columns={'Billing_Ref2': 'MarketOrderId', 'Service Type': 'Service Type'})
+            columns={'Billing_Ref2': 'MarketOrderId', 'Service Type ': 'Service Type'})
         dsx_report = pd.read_csv(dsx_data, encoding='utf-8-sig')
 
         dsx_report.info()
