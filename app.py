@@ -65,13 +65,13 @@ def second_page():
             columns={'Billing_Ref2': 'Order Id', 'Service Type ': 'Service Type'})
 
         df_orders = df_orders.loc[:, [
-            'Order Id', 'Pricing_Zone', 'Service Type']]
+            'Order Id', 'Pricing_Zone', 'Service Type', 'Weight']]
 
         df_invoice = pd.read_csv(file2, encoding='utf-8-sig')
         df_invoice = df_invoice.rename(columns={'ORDER ID': 'Order Id'})
 
         df_invoice = df_invoice.merge(
-            df_orders[['Order Id', 'Pricing_Zone', 'Service Type']], on='Order Id', how='left')
+            df_orders[['Order Id', 'Pricing_Zone', 'Service Type', 'Weight']], on='Order Id', how='left')
 
         # df_invoice = df_invoice.rename(columns={'Zone': 'Zone'})
 
@@ -84,13 +84,18 @@ def second_page():
         df_invoice['Package Weight'] = pd.to_numeric(
             df_invoice['Package Weight'], errors='coerce')
 
-        # df_invoice['Package Weight OZ'] = df_invoice['Package Weight'].apply(
-        #     lambda x: math.ceil(x * 16) if x < 1 else 0)
+        df_invoice['Weight'] = pd.to_numeric(
+            df_invoice['Weight'], errors='coerce')
 
-        # df_invoice['Package Weight LB'] = df_invoice['Package Weight'].apply(
-        #     lambda x: math.ceil(x) if x >= 1 else 0)
+        df_invoice['Weight'] = df_invoice['Weight'].fillna(0)
 
-        df_invoice['Package_Weight_Converted'] = df_invoice['Package Weight'].apply(
+        df_orders.info()
+        df_invoice.info()
+
+        df_invoice['Package_Weight_Converted'] = df_invoice['Weight'].apply(
+            lambda x: f"{math.ceil(x*16):.0f}oz" if x < 1 else f"{math.ceil(x)}lb")
+
+        df_invoice['Package_Weight_Converted2'] = df_invoice['Package Weight'].apply(
             lambda x: f"{math.ceil(x*16):.0f}oz" if x < 1 else f"{math.ceil(x)}lb")
 
         price_mapping = dhl_prices.set_index(
@@ -203,6 +208,8 @@ def fifth_page():
 
         dsx_report = pd.read_csv(file1, encoding='utf-8-sig')
 
+        dsx_report.info()
+
         dsx_report['TrackingNumber'] = dsx_report['TrackingNumber'].apply(
             add_backtick)
 
@@ -213,6 +220,20 @@ def fifth_page():
             lambda x: x.split(',') if isinstance(x, str) else [])
         dsx_report['NegotiatedCost'] = dsx_report['NegotiatedCost'].apply(
             lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['CartonWeight'] = dsx_report['CartonWeight'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['Class'] = dsx_report['Class'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['ShippedCarrierCode'] = dsx_report['ShippedCarrierCode'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['Carrier'] = dsx_report['Carrier'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['isVoided'] = dsx_report['isVoided'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['DateShipped'] = dsx_report['DateShipped'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
+        dsx_report['ShipUsername'] = dsx_report['ShipUsername'].apply(
+            lambda x: x.split(',') if isinstance(x, str) else [])
 
         # Create a list to store new rows
         new_rows = []
@@ -222,6 +243,13 @@ def fifth_page():
             tracking_numbers = row['TrackingNumber']
             markup_costs = row['MarkupCost']
             negotiated_costs = row['NegotiatedCost']
+            carton_weights = row['CartonWeight']
+            classes = row['Class']
+            shipped_carrier_codes = row['ShippedCarrierCode']
+            carriers = row['Carrier']
+            is_voided = row['isVoided']
+            date_shipped = row['DateShipped']
+            ship_username = row['ShipUsername']
 
             if markup_costs:
                 non_zero_mc = [
@@ -236,7 +264,29 @@ def fifth_page():
                         new_row['TrackingNumber'] = tn
                         new_row['MarkupCost'] = ','.join(non_zero_mc)
                         new_row['NegotiatedCost'] = ','.join(non_zero_nc)
-                        new_rows.append(new_row)
+
+                    for cw in carton_weights:
+                        new_row['CartonWeight'] = cw
+
+                    for c in classes:
+                        new_row['Class'] = c
+
+                    for sc in shipped_carrier_codes:
+                        new_row['ShippedCarrierCode'] = sc
+
+                    for c in carriers:
+                        new_row['Carrier'] = c
+
+                    for v in is_voided:
+                        new_row['isVoided'] = v
+
+                    for ds in date_shipped:
+                        new_row['DateShipped'] = ds
+
+                    for su in ship_username:
+                        new_row['ShipUsername'] = su
+
+                    new_rows.append(new_row)
 
         # Function to filter non-zero values and join them back as a string
 
