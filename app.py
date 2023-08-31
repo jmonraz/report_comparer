@@ -311,5 +311,42 @@ def fifth_page():
     return render_template('format-dsx-file.html')
 
 
+@app.route('/fedex-3pl', methods=['GET', 'POST'])
+def sixth_page():
+    if request.method == 'POST':
+
+        data_path = './static/data'
+
+        file1 = request.files['file1']
+
+        dsx_data = os.path.join(data_path, 'dsx_data.csv')
+
+        dsx_report = pd.read_csv(dsx_data, encoding='utf-8-sig')
+
+        fedex_invoice = pd.read_csv(file1, encoding='utf-8-sig')
+
+        fedex_invoice = fedex_invoice.rename(
+            columns={'Tracking Number': 'TrackingNumber'})
+
+        fedex_invoice['TrackingNumber'] = fedex_invoice['TrackingNumber'].apply(
+            lambda x: f'`{x}')
+
+        merged_df = fedex_invoice.merge(dsx_report[[
+                                        'TrackingNumber', 'MarketOrderId', 'NegotiatedCost', 'MarkupCost']], on='TrackingNumber', how='left')
+
+        merged_df = merged_df.loc[:, ['INVOICE #', 'INVOICE DATE', 'MarketOrderId', 'TrackingNumber', 'CONSIGNEE NAME',
+                                      'CONSIGNEE ATTENTION', 'CONSIGNEE ADDRESS 1', 'CONSIGNEE ADDRESS 2',
+                                      'CONSIGNEE CITY', 'CONSIGNEE STATE', 'CONSIGNEE ZIP CODE', 'CONSIGNEE COUNTRY CODE',
+                                      'SHIPMENT DATE', 'PRODUCT CODE', 'ZONE', 'BILLED WEIGHT', 'PIECES', 'DIMENSIONS', 'SHIPMENT TOTAL',
+                                      'BASE CHARGE AMOUNT', 'MarkupCost', 'NegotiatedCost']]
+
+        output_path = 'updated_freight_report.csv'
+        merged_df.to_csv(output_path, index=False)
+
+        return send_file(output_path, as_attachment=True)
+
+    return render_template('fedex-3pl.html')
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
