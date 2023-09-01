@@ -228,7 +228,7 @@ def fifth_page():
             lambda x: x.split(',') if isinstance(x, str) else [])
         dsx_report['Carrier'] = dsx_report['Carrier'].apply(
             lambda x: x.split(',') if isinstance(x, str) else [])
-        dsx_report['isVoided'] = dsx_report['isVoided'].apply(
+        dsx_report['IsVoid'] = dsx_report['IsVoid'].apply(
             lambda x: x.split(',') if isinstance(x, str) else [])
         dsx_report['DateShipped'] = dsx_report['DateShipped'].apply(
             lambda x: x.split(',') if isinstance(x, str) else [])
@@ -247,7 +247,7 @@ def fifth_page():
             classes = row['Class']
             shipped_carrier_codes = row['ShippedCarrierCode']
             carriers = row['Carrier']
-            is_voided = row['isVoided']
+            is_voided = row['IsVoid']
             date_shipped = row['DateShipped']
             ship_username = row['ShipUsername']
 
@@ -278,7 +278,7 @@ def fifth_page():
                         new_row['Carrier'] = c
 
                     for v in is_voided:
-                        new_row['isVoided'] = v
+                        new_row['IsVoid'] = v
 
                     for ds in date_shipped:
                         new_row['DateShipped'] = ds
