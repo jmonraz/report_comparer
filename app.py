@@ -326,7 +326,7 @@ def sixth_page():
         fedex_invoice = pd.read_csv(file1, encoding='utf-8-sig')
 
         fedex_invoice = fedex_invoice.rename(
-            columns={'Tracking Number': 'TrackingNumber'})
+            columns={'AIRBILL #': 'TrackingNumber'})
 
         fedex_invoice['TrackingNumber'] = fedex_invoice['TrackingNumber'].apply(
             lambda x: f'`{x}')
