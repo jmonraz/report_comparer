@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}3PLWINNER{% endblock %}
+
+{% block content %}
+<section class="container">
+            <h1 style="text-align: center;">Logico UPS Invoice Comparison</h1>
+            <form method="POST" enctype="multipart/form-data">
+                <div class="file-box">
+                    <label>
+                        UPS INVOICE (.xlsx)
+                        <input type="file" name="ups_file" accept=".csv, .xlsx" id="fileInput1">
+                    </label>
+                    <span class="file-name"></span>
+                </div>
+                <div class="file-box">
+                    <label>
+                        SHIPSTATION INVOICE (.csv)
+                        <input type="file" name="shipstation_file" accept=".csv, .xlsx" id="fileInput2">
+                    </label>
+                    <span class="file-name"></span>
+                </div>
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </section>
+{% endblock %}

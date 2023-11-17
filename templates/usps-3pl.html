@@ -1,28 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-    <title>3PLWINER Reports</title>
-</head>
+{% block title %}USPS 3PL{% endblock %}
 
-<body>
-    <header>
-        <ul>
-            <div class="row">
-                <li><a href="{{url_for('index')}}">Logico FI</a></li>
-                <li><a href="{{url_for('second_page')}}">Luxe 3PL</a></li>
-                <li><a href="{{url_for('third_page')}}" class="active">USPS 3PL</a></li>
-                <li><a href="{{url_for('fourth_page')}}">FI 3PL</a></li>
-                <li><a href="{{url_for('sixth_page')}}">Fedex 3PL</a></li>
-                <li><a href="{{url_for('fifth_page')}}">Format DSX</a></li>
-            </div>
-        </ul>
-        </nav>
-    </header>
-    <main>
+{% block content %}
         <section class="container">
             <h1 style="text-align: center;">3PLWINNER USPS Report</h1>
             <form method="POST" enctype="multipart/form-data">
@@ -37,8 +17,4 @@
                 <button type="submit" class="btn">Submit</button>
             </form>
         </section>
-    </main>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-
-</html>
+{% endblock %}

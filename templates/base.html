@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>{% block title %}Flask App{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <ul>
+            <div class="row">
+                <li><a href="{{url_for('seventh_page')}}">Logico UPS</a></li>
+                <li><a href="{{url_for('second_page')}}">Luxe 3PL</a></li>
+                <li><a href="{{url_for('third_page')}}">USPS 3PL</a></li>
+                <li><a href="{{url_for('fourth_page')}}">FI 3PL</a></li>
+                <li><a href="{{url_for('sixth_page')}}">Fedex 3PL</a></li>
+                <li><a href="{{url_for('fifth_page')}}">Format DSX</a></li>
+
+            </div>
+        </ul>
+    </header>
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
