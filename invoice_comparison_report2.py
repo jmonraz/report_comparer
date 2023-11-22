@@ -7,58 +7,112 @@ def invoice_comparison(ups_file, shipstation_file):
     # customer headers for excel sheet to read
     custom_headers = ["Lead Shipment Number", "Shipment Reference Number 1", "Net Amount"]
 
-    ups_df = pd.read_excel(ups_file, sheet_name=0,
-                           usecols=custom_headers)
-    ship_stations_df = pd.read_csv(shipstation_file,
-                                   usecols=['Order Number', 'Tracking Number', 'Carrier Fee', 'Store Name']).iloc[1:, :]
+    ups_df = pd.read_excel(ups_file, sheet_name=0)
+    ups_df.info()
 
-    # Rename columns in ups_df
-    ups_df.rename(columns={'Lead Shipment Number': 'Tracking Number', 'Shipment Reference Number 1': 'Order Number',
-                           'Net Amount': 'Charge'}, inplace=True)
+    column_indices = [2, 4, 11, 5, 15, 20, 26, 28, 33, 52, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+                      81]
+    ups_df = ups_df.iloc[:, column_indices].reset_index(drop=True)
 
-    # Consolidates ups data based on Tracking Number and Order Number
-    '''
-    TRACKING NUMBER 1 - ORDER NUMBER 1
-    TRACKING NUMBER 2 - ORDER NUMBER 1
-    TRACKING NUMBER 3 - ORDER NUMBER 2
-    TRACKING NUMBER 4 - ORDER NUMBER 2
-    '''
+    # open csv file as a dataframe
+    ss_df = pd.read_excel(shipstation_file, sheet_name=0)
 
-    # Clean Tracking and Order Number columns for whitespace
-    ups_df['Tracking Number'] = ups_df['Tracking Number'].str.strip()
-    ups_df['Order Number'] = ups_df['Order Number'].astype(str).str.strip()
+    # consolidate ups invoice by tracking number
+    # sum the net amount pertaining to the same order id
+    # unique tracking numbers with total net amount
+    tracking_numbers = ups_df.groupby('Tracking Number')['Net Amount'].sum().reset_index()
+    tracking_numbers['Net Amount'] = tracking_numbers['Net Amount'].round(2)
 
-    # Group by Tracking and Order Number
-    ups_consolidated = ups_df.groupby(['Tracking Number', 'Order Number']).agg({'Charge': 'sum'}).reset_index()
-    print(ups_consolidated['Order Number'].value_counts())
-    print(ups_consolidated.head())
+    # merge tracking_numbers with ups_df
+    merged_df = pd.merge(tracking_numbers, ups_df, on='Tracking Number', how='left')
 
-    # Consolidate ups data on Order ID once it's grouped by Tracking Number and Order Number
-    ups_order_consolidated = ups_consolidated.groupby(['Order Number']).agg({'Charge': 'sum'}).reset_index()
+    merged_df = merged_df[(merged_df['Entered Weight'] != 0.0)]
+    merged_df.reset_index(drop=True, inplace=True)
 
-    print(ups_order_consolidated.describe())
+    # convert Shipment Reference Number 1 to string
+    merged_df['Shipment Reference Number 1'] = merged_df['Shipment Reference Number 1'].astype(str)
+    # sort df by Shipment Reference Number 1
+    merged_df = merged_df.sort_values(by=['Shipment Reference Number 1']).reset_index(drop=True)
 
-    # Join dataframes based on Order ID Field
-    invoice_comparison = pd.merge(ups_order_consolidated, ship_stations_df, left_on=['Order Number'],
-                                  right_on=['Order Number'], suffixes=('_ups', '_ss'), how='left')
+    # add total Net Amount_x for tracking numbers with identical Shipment Reference Number 1
+    merged_df['Net Amount_x'] = merged_df.groupby('Shipment Reference Number 1')['Net Amount_x'].transform('sum')
 
-    # convert numeric numbers to numeric and round to two decimal values
-    invoice_comparison['Charge'] = pd.to_numeric(invoice_comparison['Charge']).round(2)
-    invoice_comparison['Carrier Fee'] = pd.to_numeric(invoice_comparison['Carrier Fee']).round(2)
+    # iterate through df and keep only the Net Amount_x on the first row that has multiple Net Amount_x on the same Shipment Reference Number 1
+    # place a 0.0 on the rest of the rows that have the same Shipment Reference Number 1
 
-    # Rearrange order of columns Order ID, Tracking Number, Charge, Carrier Fee
-    new_order = ['Order Number', 'Tracking Number', 'Charge', 'Carrier Fee']
-    invoice_comparison = invoice_comparison[new_order]
+    # consolidate merged_df with shipstation report  by order number
+    # on merged_df the column name is Shipment Reference Number 1
+    # on shipstation the column name is Order Number
+    # extract tge Carrier Fee column value from shipstation report
+    # merge Carrier Fee column value with merged_df where Shipment Reference Number 1 == Order Number
 
-    # Add Column to see difference between ups-ss
-    invoice_comparison['Invoice Difference(ups-ss)'] = (
-                invoice_comparison['Charge'] - invoice_comparison['Carrier Fee']).round(2)
+    # rename column name from Order Number to Shipment Reference Number 1
+    ss_df.rename(columns={'Order Number': 'Shipment Reference Number 1'}, inplace=True)
 
-    # Add Column to compare invoice
-    invoice_comparison['Invoice Match'] = np.where(invoice_comparison['Charge'] == invoice_comparison['Carrier Fee'],
-                                                   'Yes', 'No')
+    # extract only the Shipment Reference Number 1 and Carrier Fee columns
+    ss_df = ss_df.loc[:, ['Shipment Reference Number 1', 'Carrier Fee']].reset_index(drop=True)
 
+    # merge ss_df with merged_df
+    merged_df = pd.merge(merged_df, ss_df, on='Shipment Reference Number 1', how='left')
+
+    for i in range(1, len(merged_df)):
+        if merged_df.loc[i, 'Shipment Reference Number 1'] == merged_df.loc[i - 1, 'Shipment Reference Number 1']:
+            merged_df.loc[i, 'Net Amount_x'] = 0.0
+            merged_df.loc[i, 'Carrier Fee'] = 0.0
+    merged_df['Net Amount_x'] = merged_df['Net Amount_x'].round(2)
+
+    # reorganize columns
+    # drop Net Amount_y
+    merged_df.drop(columns=['Net Amount_y'], inplace=True)
+
+    # rename Net Amount_x to Net Amount
+    merged_df.rename(columns={'Net Amount_x': 'Net Amount'}, inplace=True)
+
+    # move Tracking Number column to index 4
+    tracking_number = merged_df.pop('Tracking Number')
+    merged_df.insert(4, 'Tracking Number', tracking_number)
+
+    # move Net Amount to column index 9
+    net_amount = merged_df.pop('Net Amount')
+    merged_df.insert(9, 'Net Amount', net_amount)
+
+    # rename Net Amount to Carrier Fee(UPS)
+    merged_df.rename(columns={'Net Amount': 'Carrier Fee(UPS)'}, inplace=True)
+
+    # move Carrier Fee column to index 10
+    carrier_fee = merged_df.pop('Carrier Fee')
+    merged_df.insert(10, 'Carrier Fee', carrier_fee)
+
+    # rename Carrier Fee to Carrier Fee(SS)
+    merged_df.rename(columns={'Carrier Fee': 'Carrier Fee(SS)'}, inplace=True)
+
+    # move Invoice Number to column index 4
+    invoice_number = merged_df.pop('Invoice Number')
+    merged_df.insert(3, 'Invoice Number', invoice_number)
+
+    # add new column to compare Carrier Fee(UPS) and Carrier Fee(SS)
+    # if Carrier Fee(UPS) == Carrier Fee(SS) then True else False
+    # place it after Carrier Fee(SS)
+    merged_df['Carrier Fee Match'] = merged_df['Carrier Fee(UPS)'] == merged_df['Carrier Fee(SS)']
+    merged_df['Carrier Fee Match'] = merged_df['Carrier Fee Match'].astype(str)
+    merged_df['Carrier Fee Match'] = merged_df['Carrier Fee Match'].replace({'True': 'Yes', 'False': 'No'})
+
+    # move Carrier Fee Match column to index 11
+    carrier_fee_match = merged_df.pop('Carrier Fee Match')
+    merged_df.insert(11, 'Carrier Fee Match', carrier_fee_match)
+
+    # add column Difference between Carrier Fee(UPS) and Carrier Fee(SS)
+    # place it after Match
+    merged_df['Difference'] =  merged_df['Carrier Fee(SS)'] - merged_df['Carrier Fee(UPS)']
+    merged_df['Difference'] = merged_df['Difference'].round(2)
+
+    # move Difference column to index 12
+    difference = merged_df.pop('Difference')
+    merged_df.insert(12, 'Difference', difference)
+
+    merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].astype(str)
+    merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].replace({'nan': 'no records found'})
     # Export invoice comparison report to a csv file
-    invoice_comparison.to_csv('invoice_comparison_report2.csv', index=False)
+    merged_df.to_csv('invoice_comparison_report2.csv', index=False)
 
     return invoice_comparison
