@@ -112,7 +112,8 @@ def invoice_comparison(ups_file, shipstation_file):
 
     merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].astype(str)
     merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].replace({'nan': 'no records found'})
+    merged_df.info()
     # Export invoice comparison report to a csv file
     merged_df.to_csv('invoice_comparison_report2.csv', index=False)
 
-    return invoice_comparison
+    return merged_df
