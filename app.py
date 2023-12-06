@@ -367,7 +367,6 @@ def seventh_page():
         shipstation_file = request.files['shipstation_file']
 
         invoice_comparison_report = invoice_comparison(ups_file=ups_file, shipstation_file=shipstation_file)
-
         output_name = 'invoice_comparison_report.csv'
         invoice_comparison_report.to_csv(output_name, index=False)
         return send_file(output_name, as_attachment=True)

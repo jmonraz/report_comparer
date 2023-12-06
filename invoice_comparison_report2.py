@@ -1,13 +1,14 @@
 # library imports
 import pandas as pd
 import numpy as np
+from datetime import datetime 
 
 
 def invoice_comparison(ups_file, shipstation_file):
     # customer headers for excel sheet to read
     custom_headers = ["Lead Shipment Number", "Shipment Reference Number 1", "Net Amount"]
 
-    ups_df = pd.read_excel(ups_file, sheet_name=0)
+    ups_df = pd.read_excel(ups_file, sheet_name=0) # add custom headers to read specific columns
     ups_df.info()
 
     column_indices = [2, 4, 11, 5, 15, 20, 26, 28, 33, 52, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
@@ -50,8 +51,56 @@ def invoice_comparison(ups_file, shipstation_file):
     ss_df.rename(columns={'Order Number': 'Shipment Reference Number 1'}, inplace=True)
 
     # extract only the Shipment Reference Number 1 and Carrier Fee columns
-    ss_df = ss_df.loc[:, ['Shipment Reference Number 1', 'Carrier Fee']].reset_index(drop=True)
+    ss_df = ss_df.loc[:, ['Tracking Number','Shipment Reference Number 1', 'Carrier Fee']].reset_index(drop=True)
 
+    '''Code added by Jonathan to Shipment Reference Number'''
+
+    # List of unique Order ID's with count greater than one
+    unique_ids = merged_df['Shipment Reference Number 1'].value_counts()
+    # Filter list with count greater than one
+    ids_to_update = unique_ids[unique_ids > 1].to_dict()
+    # Exclude key-value pairs where the key contains a nan value
+    filtered_ids_dict = {key: value for key, value in ids_to_update.items() if "nan"  not in key and "-" not in key and len(key)>6}
+    print(filtered_ids_dict)
+
+    # Dictionary to store Tracking Number and Order Number to replace in shipstation Order ID
+    orders_to_replace_dict = {}
+
+    # # loop through Order ID column
+    for idx, value in merged_df['Shipment Reference Number 1'].items():
+        if value in filtered_ids_dict:
+            # Update Order ID Number
+            new_value = f'{value}-{filtered_ids_dict[value]}'
+            merged_df.at[idx, 'Shipment Reference Number 1'] = new_value
+            filtered_ids_dict[value] = filtered_ids_dict[value] - 1
+            # Store 'Tracking Number' and updated 'Order ID' number in orders_to_replace_dict
+            orders_to_replace_dict[f"{merged_df.at[idx, 'Tracking Number']}"] = f"{merged_df.at[idx, 'Shipment Reference Number 1']}"
+        
+    print('tracking and order ids to replace')
+    print(orders_to_replace_dict)
+
+    print('tracking and order ids to replace')
+    print(orders_to_replace_dict)
+
+    print('updated ups_consolidated dataframe')
+    new_ids = merged_df['Shipment Reference Number 1'].value_counts()
+    new_ids_dict = new_ids[new_ids > 1].to_dict()
+
+    print(new_ids_dict)
+
+    print('checking dataframe...')
+
+    print(merged_df['Shipment Reference Number 1'].value_counts())
+
+    # Create a dictionary to map Tracking and Order ID to Order IDs in 
+    tracking_order_id_dict = dict(zip(merged_df['Tracking Number'], merged_df['Shipment Reference Number 1']))
+
+    '''left off here'''
+    ss_df['Shipment Reference Number 1'] = ss_df['Tracking Number'].map(tracking_order_id_dict).fillna(ss_df['Shipment Reference Number 1'])
+    print(ss_df['Shipment Reference Number 1'].value_counts())
+
+    #drop Tracking Number column on ss_df
+    ss_df = ss_df[['Shipment Reference Number 1', 'Carrier Fee']]
     # merge ss_df with merged_df
     merged_df = pd.merge(merged_df, ss_df, on='Shipment Reference Number 1', how='left')
 
@@ -113,7 +162,11 @@ def invoice_comparison(ups_file, shipstation_file):
     merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].astype(str)
     merged_df['Carrier Fee(SS)'] = merged_df['Carrier Fee(SS)'].replace({'nan': 'no records found'})
     merged_df.info()
+
+    # Generate a timestamp for the processed file name
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
     # Export invoice comparison report to a csv file
-    merged_df.to_csv('invoice_comparison_report2.csv', index=False)
+    merged_df.to_csv(f'invoice_comparison_report2.csv_{timestamp}', index=False)
 
     return merged_df
