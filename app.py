@@ -367,11 +367,9 @@ def seventh_page():
         shipstation_file = request.files['shipstation_file']
 
         invoice_comparison_report = invoice_comparison(ups_file=ups_file, shipstation_file=shipstation_file)
-        print(invoice_comparison_report)
-
-        # output_name = 'invoice_comparison_report.csv'
-        # invoice_comparison_report.to_csv(output_name, index=False)
-        # return send_file(output_name, as_attachment=True)
+        output_name = 'invoice_comparison_report.csv'
+        invoice_comparison_report.to_csv(output_name, index=False)
+        return send_file(output_name, as_attachment=True)
     return render_template('logico-ups-invoice-comparison.html')
 
 

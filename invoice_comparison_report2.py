@@ -74,7 +74,7 @@ def invoice_comparison(ups_file, shipstation_file):
             merged_df.at[idx, 'Shipment Reference Number 1'] = new_value
             filtered_ids_dict[value] = filtered_ids_dict[value] - 1
             # Store 'Tracking Number' and updated 'Order ID' number in orders_to_replace_dict
-            orders_to_replace_dict[f'{merged_df.at[idx, 'Tracking Number']}'] = f'{merged_df.at[idx, 'Shipment Reference Number 1']}'
+            orders_to_replace_dict[f"{merged_df.at[idx, 'Tracking Number']}"] = f"{merged_df.at[idx, 'Shipment Reference Number 1']}"
         
     print('tracking and order ids to replace')
     print(orders_to_replace_dict)
@@ -167,6 +167,6 @@ def invoice_comparison(ups_file, shipstation_file):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
     # Export invoice comparison report to a csv file
-    merged_df.to_csv(f'invoice_comparison_report2_{timestamp}.csv', index=False)
+    merged_df.to_csv(f'invoice_comparison_report2.csv_{timestamp}', index=False)
 
     return merged_df
