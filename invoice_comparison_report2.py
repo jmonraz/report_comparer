@@ -15,12 +15,16 @@ def invoice_comparison(ups_file, shipstation_file):
                       81]
     ups_df = ups_df.iloc[:, column_indices].reset_index(drop=True)
 
+    
+
     # open csv file as a dataframe
     ss_df = pd.read_excel(shipstation_file, sheet_name=0)
 
     # consolidate ups invoice by tracking number
     # sum the net amount pertaining to the same order id
     # unique tracking numbers with total net amount
+
+
     tracking_numbers = ups_df.groupby('Tracking Number')['Net Amount'].sum().reset_index()
     tracking_numbers['Net Amount'] = tracking_numbers['Net Amount'].round(2)
 
@@ -35,8 +39,8 @@ def invoice_comparison(ups_file, shipstation_file):
     # sort df by Shipment Reference Number 1
     merged_df = merged_df.sort_values(by=['Shipment Reference Number 1']).reset_index(drop=True)
 
-    # add total Net Amount_x for tracking numbers with identical Shipment Reference Number 1
-    merged_df['Net Amount_x'] = merged_df.groupby('Shipment Reference Number 1')['Net Amount_x'].transform('sum')
+    # # add total Net Amount_x for tracking numbers with identical Shipment Reference Number 1
+    # merged_df['Net Amount_x'] = merged_df.groupby('Shipment Reference Number 1')['Net Amount_x'].transform('sum')
 
     # iterate through df and keep only the Net Amount_x on the first row that has multiple Net Amount_x on the same Shipment Reference Number 1
     # place a 0.0 on the rest of the rows that have the same Shipment Reference Number 1
@@ -101,6 +105,11 @@ def invoice_comparison(ups_file, shipstation_file):
 
     #drop Tracking Number column on ss_df
     ss_df = ss_df[['Shipment Reference Number 1', 'Carrier Fee']]
+
+    # add total Net Amount_x for tracking numbers with identical Shipment Reference Number 1
+    merged_df['Net Amount_x'] = merged_df.groupby('Shipment Reference Number 1')['Net Amount_x'].transform('sum')
+
+
     # merge ss_df with merged_df
     merged_df = pd.merge(merged_df, ss_df, on='Shipment Reference Number 1', how='left')
 

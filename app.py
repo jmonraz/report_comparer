@@ -4,6 +4,7 @@ import math
 from flask import Flask, render_template, request, send_file
 import os
 from invoice_comparison_report2 import invoice_comparison
+from datetime import datetime 
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -367,7 +368,9 @@ def seventh_page():
         shipstation_file = request.files['shipstation_file']
 
         invoice_comparison_report = invoice_comparison(ups_file=ups_file, shipstation_file=shipstation_file)
-        output_name = 'invoice_comparison_report.csv'
+        # Generate a timestamp for the processed file name
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        output_name = f'invoice_comparison_report_{timestamp}.csv'
         invoice_comparison_report.to_csv(output_name, index=False)
         return send_file(output_name, as_attachment=True)
     return render_template('logico-ups-invoice-comparison.html')
